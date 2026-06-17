@@ -44,8 +44,8 @@ const formatTime = (seconds) => {
 
 // 輔助函數：取得適應環境之 TTS API URL
 const getTtsApiUrl = (text, voice, rate, timestamp) => {
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const baseUrl = isLocal ? '/api/tts' : (import.meta.env.VITE_TTS_API_URL || 'https://tts-adbqeupora-uc.a.run.app');
+  const isDev = import.meta.env.DEV;
+  const baseUrl = isDev ? '/api/tts' : (import.meta.env.VITE_TTS_API_URL || 'https://tts-adbqeupora-uc.a.run.app');
   return `${baseUrl}?text=${encodeURIComponent(text)}&voice=${voice}&rate=${encodeURIComponent(rate)}&_t=${timestamp}`;
 };
 
@@ -611,17 +611,8 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
 
     // 🎬 播放/預覽時的過渡音效 (SFX) 觸發器 (避免重複播放)
     if (isPlaying && !isExporting) {
-      // 1. 開場風鈴 (Intro)
-      if (activeScene.type === 'intro') {
-        if (!playedSfxRef.current.bell) {
-          playedSfxRef.current.bell = true;
-          sfxBellRef.current.volume = muted ? 0 : ttsVolume;
-          sfxBellRef.current.currentTime = 0;
-          sfxBellRef.current.play().catch(e => console.log("SFX Bell error:", e));
-        }
-      }
       // 2. 照片場景轉場與快門
-      else if (activeScene.type === 'photo') {
+      if (activeScene.type === 'photo') {
         const idx = activeScene.index;
         if (!playedSfxRef.current.scenes[idx]) {
           playedSfxRef.current.scenes[idx] = { whoosh: false, shutter: false };
@@ -1490,13 +1481,6 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
           }
 
           // 🎬 導出時的過渡音效 (SFX) 觸發器
-          // 1. 開場風鈴
-          if (exportTime >= 0 && !exportPlayedSfx.bell) {
-            exportPlayedSfx.bell = true;
-            sfxBellRef.current.volume = muted ? 0 : ttsVolume;
-            sfxBellRef.current.currentTime = 0;
-            sfxBellRef.current.play().catch(e => console.log("Export SFX Bell error:", e));
-          }
 
           const activeScene = timeline.find(s => exportTime >= s.start && exportTime < s.end);
           if (activeScene && activeScene.type === 'photo') {
