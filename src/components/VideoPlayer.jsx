@@ -109,6 +109,7 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
   const [loadedImages, setLoadedImages] = useState([]);
   const [loadedTtsAudios, setLoadedTtsAudios] = useState({});
   const [isTtsLoading, setIsTtsLoading] = useState(false);
+  const [whooshSfxTheme, setWhooshSfxTheme] = useState('magic'); // 預設為魔幻閃爍，更為清脆好聽
   
   // 影片時間點與場景對照表
   const [timeline, setTimeline] = useState([]);
@@ -233,6 +234,16 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
     
     loadAll();
   }, [images]);
+
+  // 2.5 監聽並動態更新轉場特效音源 (防止網頁自動填充或快取阻擋)
+  useEffect(() => {
+    if (whooshSfxTheme === 'none') {
+      sfxWhooshRef.current.src = '';
+    } else {
+      sfxWhooshRef.current.src = `./audio/whoosh_${whooshSfxTheme}.wav`;
+      sfxWhooshRef.current.load();
+    }
+  }, [whooshSfxTheme]);
 
   // 3. 預先載入 Edge TTS 音訊檔 (透過本地 WebSocket 代理 `/api/tts`)
   useEffect(() => {
@@ -618,7 +629,7 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
         const sceneSfx = playedSfxRef.current.scenes[idx];
 
         // 轉場風聲 (進入照片的瞬間)
-        if (!sceneSfx.whoosh) {
+        if (whooshSfxTheme !== 'none' && !sceneSfx.whoosh) {
           sceneSfx.whoosh = true;
           sfxWhooshRef.current.volume = muted ? 0 : bgmVolume * 0.8;
           sfxWhooshRef.current.currentTime = 0;
@@ -1494,7 +1505,7 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
             const sceneSfx = exportPlayedSfx.scenes[idx];
 
             // 轉場風聲
-            if (!sceneSfx.whoosh) {
+            if (whooshSfxTheme !== 'none' && !sceneSfx.whoosh) {
               sceneSfx.whoosh = true;
               sfxWhooshRef.current.volume = muted ? 0 : bgmVolume * 0.8;
               sfxWhooshRef.current.currentTime = 0;
@@ -1772,6 +1783,32 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
               <option value="acoustic">木吉他 (Acoustic Guitar)</option>
               <option value="retro">復古電子 (Retro Synth)</option>
             </select>
+          </div>
+        </div>
+
+        <div className="audio-option-card active">
+          <div className="audio-card-header">
+            <span>🔊 轉場特效音風格 (SFX)</span>
+          </div>
+          <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+              選擇照片切換瞬間的過渡音效風格：
+            </p>
+            <select 
+              value={whooshSfxTheme} 
+              onChange={(e) => setWhooshSfxTheme(e.target.value)}
+              className="audio-select"
+              disabled={isExporting}
+              style={{ width: '100%', padding: '0.35rem 0.5rem', fontSize: '0.8rem', marginTop: '0.2rem' }}
+            >
+              <option value="magic">✨ 魔幻閃爍 (Magic Sparkle)</option>
+              <option value="drop">💧 清脆水滴 (Digital Drop)</option>
+              <option value="wind">🍃 柔和風聲 (Soft Wind)</option>
+              <option value="none">🔇 關閉轉場音效 (Disable SFX)</option>
+            </select>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0, marginTop: '0.2rem' }}>
+              小提示：魔幻閃爍與清脆水滴比風聲更適合校園與課堂成果！
+            </p>
           </div>
         </div>
       </div>
