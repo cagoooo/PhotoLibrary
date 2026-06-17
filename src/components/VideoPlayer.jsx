@@ -134,6 +134,24 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
   const ttsSourceNodesRef = useRef({});
   const sessionTimestampRef = useRef(Date.now());
   
+  // 🌌 用於 Intro & Outro 科技粒子背景的固定隨機粒子
+  const techParticlesRef = useRef([]);
+  if (techParticlesRef.current.length === 0) {
+    const temp = [];
+    for (let i = 0; i < 45; i++) {
+      temp.push({
+        x: Math.random(),
+        y: Math.random(),
+        vx: (Math.random() - 0.5) * 0.012, // 緩慢漂移
+        vy: (Math.random() - 0.5) * 0.012,
+        radius: Math.random() * 3 + 1, // 1px ~ 4px
+        pulseSpeed: Math.random() * 1.5 + 0.5,
+        alphaBase: Math.random() * 0.4 + 0.15
+      });
+    }
+    techParticlesRef.current = temp;
+  }
+  
   // 匯出設定狀態 (畫質解析度與影片格式)
   const [exportResolution, setExportResolution] = useState('720p');
   const [exportMimeType, setExportMimeType] = useState('webm-vp9');
@@ -466,6 +484,96 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
     return () => pauseAllEdgeTts();
   }, [isPlaying]);
 
+  // 🌌 繪製科技粒子與網格細線背景
+  const drawTechBackground = (ctx, width, height, progress) => {
+    // 1. 繪製深邃的科技藍黑漸層底色
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, '#0a0f1d'); // 暗色科技藍
+    gradient.addColorStop(0.5, '#0f172a');
+    gradient.addColorStop(1, '#020617');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. 繪製緩緩旋轉的科技圓盤與微弱網格
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.strokeStyle = '#4fc3f7';
+    ctx.lineWidth = 1;
+    
+    // 繪製同心圓
+    ctx.beginPath();
+    ctx.arc(width / 2, height / 2, 220 + progress * 40, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(width / 2, height / 2, 400 - progress * 20, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // 幾條放射線
+    const lineCount = 8;
+    for (let i = 0; i < lineCount; i++) {
+      const angle = (i * Math.PI * 2 / lineCount) + (progress * 0.04);
+      ctx.beginPath();
+      ctx.moveTo(width / 2, height / 2);
+      ctx.lineTo(
+        width / 2 + Math.cos(angle) * (width * 0.55),
+        height / 2 + Math.sin(angle) * (width * 0.55)
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 3. 科技點陣連線漂移
+    ctx.save();
+    const particles = techParticlesRef.current;
+    
+    // 繪製粒子間連線
+    ctx.strokeStyle = 'rgba(79, 195, 247, 0.06)';
+    ctx.lineWidth = 0.8;
+    for (let i = 0; i < particles.length; i++) {
+      const p1 = particles[i];
+      const px = ((p1.x + p1.vx * progress * 8) % 1.0 + 1.0) % 1.0 * width;
+      const py = ((p1.y + p1.vy * progress * 8) % 1.0 + 1.0) % 1.0 * height;
+      
+      for (let j = i + 1; j < particles.length; j++) {
+        const p2 = particles[j];
+        const qx = ((p2.x + p2.vx * progress * 8) % 1.0 + 1.0) % 1.0 * width;
+        const qy = ((p2.y + p2.vy * progress * 8) % 1.0 + 1.0) % 1.0 * height;
+        
+        const dist = Math.hypot(px - qx, py - qy);
+        if (dist < 160) {
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(qx, qy);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // 繪製粒子點與亮點呼吸燈
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      const px = ((p.x + p.vx * progress * 8) % 1.0 + 1.0) % 1.0 * width;
+      const py = ((p.y + p.vy * progress * 8) % 1.0 + 1.0) % 1.0 * height;
+      
+      const pulse = Math.sin(progress * Math.PI * p.pulseSpeed);
+      const alpha = Math.max(0.12, p.alphaBase + pulse * 0.18);
+      
+      ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(px, py, p.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 為較大核心粒子提供外部發光暈
+      if (p.radius > 2.5) {
+        ctx.fillStyle = `rgba(56, 189, 248, ${alpha * 0.22})`;
+        ctx.beginPath();
+        ctx.arc(px, py, p.radius * 2.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  };
+
   // 6. 核心 Canvas 渲染邏輯
   const drawCanvas = (time) => {
     const canvas = canvasRef.current;
@@ -546,36 +654,61 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
     // 6.1 繪製開頭片頭 (Intro)
     if (activeScene.type === 'intro') {
       const progress = (time - activeScene.start) / activeScene.duration;
-      
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, '#1e1b4b');
-      gradient.addColorStop(1, '#0f172a');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
+      const scaleFactor = width / 1280;
 
-      ctx.fillStyle = 'rgba(6, 182, 212, 0.15)';
-      ctx.beginPath();
-      ctx.arc(width / 2 - 200 + progress * 100, height / 2 - 50, 80 + progress * 20, 0, Math.PI * 2);
-      ctx.fill();
+      // 🌌 1. 繪製科技粒子與細線網格背景
+      drawTechBackground(ctx, width, height, progress);
 
-      ctx.fillStyle = 'rgba(79, 70, 229, 0.15)';
-      ctx.beginPath();
-      ctx.arc(width / 2 + 200 - progress * 100, height / 2 + 100, 100 - progress * 10, 0, Math.PI * 2);
-      ctx.fill();
-
+      // 📐 2. 設定文字對齊基準
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 54px "Noto Sans TC", sans-serif';
+      // ✨ 3. 繪製主標題 (Cinematic Zoom & 炫光亮點掃過)
+      ctx.save();
       const titleAlpha = Math.min(1, progress * 2) * Math.max(0, (1 - progress) * 4);
       ctx.globalAlpha = titleAlpha;
-      ctx.fillText(activeScene.title, width / 2, height / 2 - 40);
-
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = '500 24px "Noto Sans TC", sans-serif';
-      ctx.fillText(activeScene.subtitle, width / 2, height / 2 + 40);
       
+      // Cinematic Zoom (字體隨播放進度緩慢從 52px 慢推近到 59px)
+      const introTitleSize = Math.round((52 + progress * 7) * scaleFactor);
+      ctx.font = `bold ${introTitleSize}px "Noto Sans TC", sans-serif`;
+      
+      const titleText = activeScene.title;
+      const textWidth = ctx.measureText(titleText).width;
+      const titleX = width / 2;
+      const titleY = height / 2 - 35 * scaleFactor;
+
+      // 亮點掃過渐變
+      const sweepProgress = Math.min(1.0, Math.max(0.0, (progress - 0.15) * 2.0)); // 在 15% 到 65% 進度間掃過
+      const textGradient = ctx.createLinearGradient(titleX - textWidth / 2, 0, titleX + textWidth / 2, 0);
+      const pos1 = Math.max(0, sweepProgress - 0.15);
+      const pos2 = sweepProgress;
+      const pos3 = Math.min(1, sweepProgress + 0.15);
+      
+      textGradient.addColorStop(0, '#ffffff');
+      textGradient.addColorStop(pos1, '#ffffff');
+      textGradient.addColorStop(pos2, '#38bdf8'); // 炫光點 (發光青色)
+      textGradient.addColorStop(pos3, '#ffffff');
+      textGradient.addColorStop(1, '#ffffff');
+      
+      ctx.fillStyle = textGradient;
+      ctx.fillText(titleText, titleX, titleY);
+      ctx.restore();
+
+      // 🚀 4. 繪製副標題 (Slide-up 向上滑入 & 淡入)
+      ctx.save();
+      const subAlpha = Math.min(1, progress * 2.8) * Math.max(0, (1 - progress) * 4);
+      ctx.globalAlpha = subAlpha;
+      
+      // Slide-up (在播放前 40% 的時間內緩緩向上滑動 15px)
+      const slideProgress = Math.min(1.0, progress * 2.5);
+      const subSlideY = (height / 2 + 50 * scaleFactor) - ((1.0 - slideProgress) * 15 * scaleFactor);
+      
+      const introSubSize = Math.round(24 * scaleFactor);
+      ctx.font = `500 ${introSubSize}px "Noto Sans TC", sans-serif`;
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText(activeScene.subtitle, width / 2, subSlideY);
+      ctx.restore();
+
       ctx.globalAlpha = 1.0;
     }
 
@@ -651,7 +784,7 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
               let transDy = 0;
               let transScaleOffset = 1.0;
 
-              if (transType === 'crossfade') {
+              if (transType === 'crossfade' || transType === 'glow-sweep') {
                 prevAlpha = 1 - transProgress;
               } else if (transType === 'slide-left') {
                 transDx = -transProgress * width;
@@ -661,9 +794,11 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
                 transDy = -transProgress * height;
               } else if (transType === 'slide-down') {
                 transDy = transProgress * height;
-              } else if (transType === 'zoom-transition') {
+              } else if (transType === 'zoom-transition' || transType === 'warp-zoom') {
+                // 🚀 Warp Zoom 時空變焦 (替代/增強原本的縮放轉場，增加多模態科技感)
                 prevAlpha = 1 - transProgress;
-                transScaleOffset = 1.0 + transProgress * 0.4;
+                transScaleOffset = 1.0 + transProgress * 0.45;
+                ctx.filter = `blur(${transProgress * 18 * (width / 1280)}px) saturate(${1 + transProgress * 0.5})`;
               } else if (transType === 'fade-to-black') {
                 if (transProgress < 0.5) {
                   prevAlpha = 1.0;
@@ -715,7 +850,7 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
                 pdHeight = width / pImgRatio;
               }
               ctx.drawImage(prevImgObj, -pdWidth / 2, -pdHeight / 2, pdWidth, pdHeight);
-              if (transType === 'wipe-right' || transType === 'circle-crop' || transType === 'blur-transition') {
+              if (transType === 'wipe-right' || transType === 'circle-crop' || transType === 'blur-transition' || transType === 'zoom-transition' || transType === 'warp-zoom') {
                 ctx.restore();
                 ctx.filter = 'none';
               }
@@ -773,24 +908,101 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
     // 6.3 繪製結尾片尾 (Outro)
     else if (activeScene.type === 'outro') {
       const progress = (time - activeScene.start) / activeScene.duration;
+      const scaleFactor = width / 1280;
       
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, width, height);
+      // 🌌 1. 延續科技粒子背景 (隨播放漸暗)
+      drawTechBackground(ctx, width, height, progress);
 
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      ctx.font = 'bold 44px "Noto Sans TC", sans-serif';
-      ctx.fillStyle = '#ffffff';
-      const outroAlpha = Math.min(1, progress * 2) * Math.max(0, (1 - progress) * 4);
+      // ✨ 2. 繪製主致謝標題 (Cinematic Zoom)
+      ctx.save();
+      // 在進度末段 (大於 85%) 平滑淡出至全黑
+      const fadeOutAlpha = Math.max(0, (1 - progress) * 6.5);
+      const outroAlpha = Math.min(1, progress * 2) * Math.max(0, (1 - progress) * 4) * fadeOutAlpha;
       ctx.globalAlpha = outroAlpha;
-      ctx.fillText(activeScene.title, width / 2, height / 2 - 30);
 
-      ctx.font = '500 20px "Noto Sans TC", sans-serif';
+      const outroTitleSize = Math.round((42 + progress * 5) * scaleFactor);
+      ctx.font = `bold ${outroTitleSize}px "Noto Sans TC", sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(activeScene.title, width / 2, height / 2 - 35 * scaleFactor);
+      ctx.restore();
+
+      // 🚀 3. 繪製副致謝標題
+      ctx.save();
+      ctx.globalAlpha = outroAlpha;
+      const outroSubSize = Math.round(20 * scaleFactor);
+      ctx.font = `500 ${outroSubSize}px "Noto Sans TC", sans-serif`;
       ctx.fillStyle = '#94a3b8';
-      ctx.fillText(activeScene.subtitle, width / 2, height / 2 + 30);
+      ctx.fillText(activeScene.subtitle, width / 2, height / 2 + 20 * scaleFactor);
+      ctx.restore();
+
+      // 💮 4. 繪製「阿凱老師致謝印記 (Author Stamp)」
+      ctx.save();
+      const stampAlpha = Math.min(1.0, Math.max(0.0, (progress - 0.2) * 3.0)) * outroAlpha;
+      ctx.globalAlpha = stampAlpha;
+      
+      const stampX = width / 2;
+      const stampY = height / 2 + 75 * scaleFactor;
+      const stampRadius = 22 * scaleFactor;
+
+      // 外細圈
+      ctx.strokeStyle = '#22d3ee'; // 發光青色
+      ctx.lineWidth = 1.2 * scaleFactor;
+      ctx.beginPath();
+      ctx.arc(stampX, stampY, stampRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 內圈裝飾線
+      ctx.strokeStyle = 'rgba(34, 211, 238, 0.4)';
+      ctx.beginPath();
+      ctx.arc(stampX, stampY, stampRadius - 5 * scaleFactor, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 核心 ❤️ 印記
+      ctx.fillStyle = '#ef4444';
+      ctx.font = `${Math.round(13 * scaleFactor)}px "Noto Sans TC", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('❤️', stampX, stampY + 0.8 * scaleFactor);
+      ctx.restore();
 
       ctx.globalAlpha = 1.0;
+    }
+
+    // ⏳ 5. 繪製底部時間軸進度條 (Minimalist Timeline Progress Bar)
+    if (activeScene.type === 'photo' || activeScene.type === 'intro' || activeScene.type === 'outro') {
+      ctx.save();
+      const scaleFactor = width / 1280;
+      const barHeight = 6 * scaleFactor;
+      const barY = height - barHeight;
+      const playProgress = Math.min(1.0, time / duration);
+      
+      // 1) 繪製背景軌道
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillRect(0, barY, width, barHeight);
+      
+      // 2) 繪製發光進度填充 (青色至粉紅霓虹漸變)
+      const barGrad = ctx.createLinearGradient(0, 0, width, 0);
+      barGrad.addColorStop(0, '#06b6d4'); // 青色
+      barGrad.addColorStop(0.5, '#6366f1'); // 藍紫
+      barGrad.addColorStop(1, '#ec4899'); // 粉紅
+      ctx.fillStyle = barGrad;
+      ctx.fillRect(0, barY, width * playProgress, barHeight);
+      
+      // 3) 繪製發光進度頭 (Glow Dot)
+      if (playProgress > 0 && playProgress < 1.0) {
+        const dotX = width * playProgress;
+        const dotY = barY + barHeight / 2;
+        ctx.shadowBlur = 10 * scaleFactor;
+        ctx.shadowColor = '#06b6d4';
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 5 * scaleFactor, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
   };
 
