@@ -120,9 +120,15 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
   const isPlayingRef = useRef(false);
   
   // 音效檔案 Refs 與播放狀態
-  const sfxBellRef = useRef(new Audio("./audio/bell.wav"));
-  const sfxShutterRef = useRef(new Audio("./audio/shutter.wav"));
-  const sfxWhooshRef = useRef(new Audio("./audio/whoosh.wav"));
+  // ⚠️ 必須用 lazy init（而非 useRef(new Audio(...))），否則 new Audio() 會在每次 render 都執行。
+  // 播放時 playLoop 每幀 setCurrentTime → 每幀 re-render，會瞬間累積上千個 WebMediaPlayer，
+  // 撞到 Chrome 媒體元素上限後 BGM／TTS 全部建立失敗 → 沒聲音。
+  const sfxBellRef = useRef(null);
+  const sfxShutterRef = useRef(null);
+  const sfxWhooshRef = useRef(null);
+  if (!sfxBellRef.current) sfxBellRef.current = new Audio("./audio/bell.wav");
+  if (!sfxShutterRef.current) sfxShutterRef.current = new Audio("./audio/shutter.wav");
+  if (!sfxWhooshRef.current) sfxWhooshRef.current = new Audio("./audio/whoosh.wav");
   const sfxBellSourceRef = useRef(null);
   const sfxShutterSourceRef = useRef(null);
   const sfxWhooshSourceRef = useRef(null);
