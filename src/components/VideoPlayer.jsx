@@ -636,12 +636,14 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
           sfxWhooshRef.current.play().catch(e => console.log("SFX Whoosh error:", e));
         }
 
-        // 相機快門 (轉場結束 0.5 秒後)
+        // 相機快門 (轉場結束 0.5 秒後) — 受 whooshSfxTheme 控制，選 none 則靜音
         if (time >= activeScene.start + 0.5 && !sceneSfx.shutter) {
           sceneSfx.shutter = true;
-          sfxShutterRef.current.volume = muted ? 0 : ttsVolume * 0.7;
-          sfxShutterRef.current.currentTime = 0;
-          sfxShutterRef.current.play().catch(e => console.log("SFX Shutter error:", e));
+          if (whooshSfxTheme !== 'none') {
+            sfxShutterRef.current.volume = muted ? 0 : bgmVolume * 0.12;
+            sfxShutterRef.current.currentTime = 0;
+            sfxShutterRef.current.play().catch(e => console.log("SFX Shutter error:", e));
+          }
         }
       }
     }
@@ -1515,9 +1517,11 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
             // 相機快門
             if (exportTime >= activeScene.start + 0.5 && !sceneSfx.shutter) {
               sceneSfx.shutter = true;
-              sfxShutterRef.current.volume = muted ? 0 : ttsVolume * 0.7;
-              sfxShutterRef.current.currentTime = 0;
-              sfxShutterRef.current.play().catch(e => console.log("Export SFX Shutter error:", e));
+              if (whooshSfxTheme !== 'none') {
+                sfxShutterRef.current.volume = muted ? 0 : bgmVolume * 0.12;
+                sfxShutterRef.current.currentTime = 0;
+                sfxShutterRef.current.play().catch(e => console.log("Export SFX Shutter error:", e));
+              }
             }
 
             if (ttsEnabled) {
