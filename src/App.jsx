@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Image as ImageIcon, BookOpen, AlertCircle, Play, Film, Check, ArrowRight, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Sparkles, Image as ImageIcon, BookOpen, AlertCircle, Play, Film, Check, ArrowRight, CheckCircle, XCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { generateVideoScript, testApiKey } from './utils/gemini';
 import OnboardingDialog from './components/OnboardingDialog';
 import Footer from './components/Footer';
@@ -26,6 +26,7 @@ export default function App() {
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [keyTestStatus, setKeyTestStatus] = useState(null); // 'success' | 'error' | null
   const [keyTestError, setKeyTestError] = useState('');
+  const [showKey, setShowKey] = useState(false);
 
   // 1. 初始化讀取 API Key (優先從環境變數或 localStorage)
   useEffect(() => {
@@ -248,14 +249,38 @@ export default function App() {
                 </a>
               </div>
               <div className="api-key-input-wrapper" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <input 
-                  type="password" 
-                  value={apiKey} 
-                  onChange={handleApiKeyChange}
-                  placeholder="輸入 AIzaSy 開頭的 API 授權金鑰..."
-                  className="input-text"
-                  disabled={isTestingKey}
-                />
+                <div style={{ position: 'relative', flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                  <input 
+                    id="api-auth-key-input-field"
+                    name="api-auth-key-input-field"
+                    type={showKey ? "text" : "password"} 
+                    value={apiKey} 
+                    onChange={handleApiKeyChange}
+                    placeholder="輸入 AIzaSy 開頭的 API 授權金鑰..."
+                    className="input-text"
+                    style={{ width: '100%', paddingRight: '2.5rem' }}
+                    disabled={isTestingKey}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey(!showKey)}
+                    style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: 0
+                    }}
+                    title={showKey ? "隱藏金鑰" : "顯示金鑰"}
+                  >
+                    {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 <button 
                   type="button" 
                   onClick={handleTestKey} 
