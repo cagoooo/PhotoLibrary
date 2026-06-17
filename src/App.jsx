@@ -183,7 +183,7 @@ export default function App() {
         <div className="header-content">
           <div className="logo-section">
             <Film className="logo-icon" size={24} />
-            <h1>智慧照片影片產生器</h1>
+            <h1>智慧自動化照片成果轉影片產生器</h1>
           </div>
           
           <div className="nav-actions">
@@ -210,9 +210,9 @@ export default function App() {
 
         {/* 歡迎橫幅 */}
         <div className="intro-banner">
-          <h2>📸 活動成果，一秒變精美大片！</h2>
+          <h2>📸 智慧自動化，照片成果一秒轉精美影片！</h2>
           <p>
-            只需要上傳您的照片紀錄，多模態智慧分析技術將自動識別照片中發生的故事、編寫流暢中文旁白與字幕，並搭配精彩的 Ken Burns 動效與背景音樂，匯出專業的剪輯影片！
+            只需要上傳您的照片紀錄，多模態智慧分析技術將自動識別照片中發生的故事、編寫流暢中文旁白與字幕，並搭配精彩的 Ken Burns 動效與背景音樂，自動把照片成果轉換成專業的剪輯影片！
           </p>
           <div className="banner-buttons">
             <button className="btn-secondary" onClick={() => setIsOnboardingOpen(true)}>

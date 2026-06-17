@@ -57,7 +57,7 @@ export default function OnboardingDialog({ isOpen, onClose }) {
 
         <div className="onboarding-body">
           <p className="onboarding-intro">
-            歡迎使用！這款工具能讓您上傳照片，並透過多模態視覺辨識技術，自動編寫故事腳本並剪輯成專業的成果影片。
+            歡迎使用「智慧自動化照片成果轉影片產生器」！只要上傳照片，就能透過多模態視覺辨識技術，自動編寫故事腳本並把照片成果轉換成專業的剪輯影片。
           </p>
 
           <div className="onboarding-steps">
