@@ -7,9 +7,9 @@
 
 if (typeof window === 'undefined') {
     // 🏷️ 建置版本號：由 Vite 建置插件（vite.config.js 的 swVersionPlugin）在 build 時自動以
-    // git SHA 或時間戳取代 b7067cc，確保每次部署 SW 內容位元都會改變，
+    // git SHA 或時間戳取代 06f019d，確保每次部署 SW 內容位元都會改變，
     // 否則瀏覽器會認為 SW 沒變、永遠不觸發更新偵測。
-    const BUILD_VERSION = 'b7067cc';
+    const BUILD_VERSION = '06f019d';
     console.log('[coi-sw] Service Worker 版本：', BUILD_VERSION);
 
     self.addEventListener('install', () => {
