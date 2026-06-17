@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Image as ImageIcon, BookOpen, AlertCircle, Play, Film, Check, ArrowRight, CheckCircle, XCircle, Loader2, Eye, EyeOff } from 'lucide-react';
-import { generateVideoScript, testApiKey } from './utils/gemini';
+import { Sparkles, Image as ImageIcon, BookOpen, AlertCircle, Play, Film, Check, ArrowRight, CheckCircle, XCircle, Loader2, Eye, EyeOff, Copy, Share2 } from 'lucide-react';
+import { generateVideoScript, testApiKey, refinePromoCopy } from './utils/gemini';
 import OnboardingDialog from './components/OnboardingDialog';
 import Footer from './components/Footer';
 import ThemeToggle from './components/ThemeToggle';
@@ -27,6 +27,11 @@ export default function App() {
   const [keyTestStatus, setKeyTestStatus] = useState(null); // 'success' | 'error' | null
   const [keyTestError, setKeyTestError] = useState('');
   const [showKey, setShowKey] = useState(false);
+
+  // 社群分享文案狀態
+  const [promoText, setPromoText] = useState('');
+  const [isPromoLoading, setIsPromoLoading] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // 1. 初始化讀取 API Key (優先從環境變數或 localStorage)
   useEffect(() => {
@@ -174,6 +179,61 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // 5. 當影片腳本生成或變更時，自動更新/初始化社群推廣文案
+  useEffect(() => {
+    if (videoScript) {
+      // 提取 2-3 個精華看點
+      const highlights = videoScript.scenes
+        .slice(0, 3)
+        .map((s, idx) => `✨ 【第 ${idx + 1} 幕】${s.subtitle || s.narration}`)
+        .join('\n');
+
+      const defaultPromo = `資訊組報告：\n🎯【${videoScript.title}】成果影片全新上線！\n\n還在為了活動紀錄與成果展示傷腦筋嗎？\n特別將這次的精彩瞬間整理成成果影片，記錄了大家共同學習與創作的美好時光。\n✨ 運用多模態智慧分析技術，自動生成流暢中文旁白與專業電影轉場！\n\n🎬 影片精彩看點：\n${highlights}\n\n🚀 立即體驗\n教學成果影片產生器網頁：\nhttps://cagoooo.github.io/PhotoLibrary/`;
+
+      setPromoText(defaultPromo);
+    } else {
+      setPromoText('');
+    }
+  }, [videoScript]);
+
+  // 呼叫 API 進行智慧文案潤飾
+  const handleRefinePromo = async () => {
+    if (!apiKey) {
+      setError('請先輸入並設定您的 API 授權金鑰！');
+      return;
+    }
+    if (!videoScript) {
+      setError('請先產生影片腳本以進行文案潤飾！');
+      return;
+    }
+
+    setIsPromoLoading(true);
+    setError('');
+
+    try {
+      const refinedText = await refinePromoCopy(videoScript, apiKey);
+      setPromoText(refinedText);
+    } catch (err) {
+      setError(err.message || '智慧潤飾文案失敗，請重試。');
+    } finally {
+      setIsPromoLoading(false);
+    }
+  };
+
+  // 複製文案至剪貼簿
+  const handleCopyPromo = () => {
+    if (!promoText) return;
+    navigator.clipboard.writeText(promoText)
+      .then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error('複製失敗:', err);
+        setError('無法複製文字，請手動選取複製。');
+      });
   };
 
   return (
@@ -428,6 +488,87 @@ export default function App() {
                 </>
               )}
             </button>
+
+            {/* Step 5: 社群分享文案產生器 */}
+            <div style={{ marginTop: '2.5rem', borderTop: '2px dashed var(--border-color)', paddingTop: '2rem' }}>
+              <h3 style={{ borderBottom: 'none', paddingBottom: 0, marginBottom: '1rem' }}>
+                📢 Step 5: 社群分享文案產生器
+              </h3>
+              
+              {!videoScript ? (
+                <div style={{ padding: '1rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  💡 <b>使用說明：</b>請先在 Step 2 & 3 上傳照片並填寫主題，點擊上方「開始分析照片並產生影片」按鈕，系統即可在此為您自動生成符合教師社群推廣規範的分享文案。
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    已為您自動生成適合發佈至 LINE / Facebook 的推廣文案。您可直接手動修改，或點擊<b>「智慧潤飾」</b>讓系統進行美化。
+                  </p>
+                  
+                  <textarea 
+                    value={promoText}
+                    onChange={(e) => setPromoText(e.target.value)}
+                    className="textarea-subtitle"
+                    style={{ minHeight: '180px', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: '1.5' }}
+                    placeholder="產生的文案將顯示在此處..."
+                    disabled={isPromoLoading}
+                  />
+                  
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button 
+                      onClick={handleCopyPromo}
+                      className="btn-primary"
+                      style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexGrow: 1, justifyContent: 'center' }}
+                      disabled={isPromoLoading}
+                    >
+                      {isCopied ? (
+                        <>
+                          <Check size={16} />
+                          已複製到剪貼簿！
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={16} />
+                          複製文案
+                        </>
+                      )}
+                    </button>
+                    
+                    <button 
+                      onClick={handleRefinePromo}
+                      className="btn-secondary"
+                      style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexGrow: 1, justifyContent: 'center' }}
+                      disabled={isPromoLoading}
+                    >
+                      {isPromoLoading ? (
+                        <>
+                          <Loader2 className="animate-spin" size={16} />
+                          潤飾中...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={16} />
+                          智慧潤飾文案
+                        </>
+                      )}
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        const lineUrl = `https://line.me/R/share?text=${encodeURIComponent(promoText)}`;
+                        window.open(lineUrl, '_blank');
+                      }}
+                      className="btn-secondary"
+                      style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexGrow: 1, justifyContent: 'center', backgroundColor: '#06c755', color: '#ffffff', borderColor: '#06c755' }}
+                      disabled={isPromoLoading}
+                    >
+                      <Share2 size={16} />
+                      分享至 LINE
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 右側：成果預覽與匯出區 */}

@@ -162,3 +162,74 @@ export async function testApiKey(apiKey) {
     throw new Error(error.message || "驗證失敗，請檢查金鑰是否正確。");
   }
 }
+
+/**
+ * 呼叫 Gemini 2.5 Flash Lite 進行社群推廣文案的智慧潤飾與生成
+ * @param {Object} videoScript - 影片腳本資料
+ * @param {string} apiKey - Gemini API Key
+ * @returns {Promise<string>} - 產生的社群分享文案
+ */
+export async function refinePromoCopy(videoScript, apiKey) {
+  if (!apiKey) {
+    throw new Error("請先設定 Gemini API Key");
+  }
+  if (!videoScript) {
+    throw new Error("無效的影片腳本資料");
+  }
+
+  // 1. 初始化
+  const genAI = new GoogleGenerativeAI(apiKey);
+  // 使用推薦的穩定模型 gemini-2.5-flash-lite
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash-lite"
+  });
+
+  // 2. 準備場景旁白資訊
+  const scenesSummary = videoScript.scenes
+    .map((s, idx) => `第 ${idx + 1} 幕旁白/字幕：${s.subtitle || s.narration}`)
+    .join("\n");
+
+  // 3. 撰寫 Prompt，要求遵守國小教師 LINE 社群推廣文案撰寫規範
+  const prompt = `
+你是一位專業的教育科技推廣與社群行銷專家。現在要請你根據以下的影片腳本內容，撰寫並潤飾一份適合發佈至國小與國中教師 LINE 班級與領域群組的成果影片推廣文案。
+
+【影片腳本與主題資訊】
+- 影片主題/標題：${videoScript.title}
+- 影片副標題：${videoScript.subtitle || "無"}
+- 各幕畫面內容：
+${scenesSummary}
+
+【撰寫規範（重要鐵律）】
+1. 首行統一前綴：『資訊組報告：』
+2. 次行標題格式：『🎯【${videoScript.title}】成果影片全新上線！』，標題內拿掉多餘的修飾詞，直奔主題。
+3. 核心特色與應用簡介：
+   - 以行政資訊組長宣導、親切、熱情且溫馨的口吻，簡要說明活動的亮點與感人之處（大約 15-20 字一句，句尾適度斷行，方便手機閱讀）。
+   - 例如：『還在為了活動紀錄與成果展示傷腦筋嗎？特別將這次的精彩瞬間整理成成果影片，記錄了大家共同學習與創作的美好時光。』
+4. 影片精彩看點：
+   - 標題為：『🎬 影片精彩看點』
+   - 列出 2-3 個影片的精華畫面或故事主線（例如：「大家齊心協力解決難關」、「看到成果那一刻的喜悅表情」）。
+5. 行動呼籲與特定網址連結：
+   - 結尾標題：『🚀 立即體驗』
+   - 內容為：
+教學成果影片產生器網頁：
+https://cagoooo.github.io/PhotoLibrary/
+6. 禁用詞彙（鐵律）：
+   - ⚠️ 嚴禁在任何地方出現『完全免費』、 『免註冊』、『無廣告』、『免付費』、『無帳號』等推銷性、廣告性質詞彙！
+7. 排版與字數限制：
+   - ⚠️ 區塊間只使用『空一行（Blank Line）』來分隔，禁止使用任何 --- 或 === 或 ___ 等分隔線。這能讓 LINE 的連結預覽卡片與文字搭配起來更加簡潔、清爽。
+   - 每句話控制在 15-25 字，以利手機窄螢幕上閱讀。
+
+請只回傳潤飾後的純文字文案內容，不要包含任何 Markdown 區塊語法（不要用 \`\`\` 或 \`\`\`text）或其他額外的解釋或說明。
+`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+    // 清理可能的 markdown 標記
+    return responseText.replace(/^```[a-zA-Z]*\n/, "").replace(/\n```$/, "").trim();
+  } catch (error) {
+    console.error("Gemini Promo Refine Error:", error);
+    throw new Error("智慧潤飾文案失敗：" + error.message);
+  }
+}
+
