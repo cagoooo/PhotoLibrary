@@ -129,9 +129,27 @@ function getAudioFromPythonEdgeTts(text, voice, rate) {
   });
 }
 
+// 🏷️ 建置時將 Service Worker 內的 __BUILD_VERSION__ 佔位字串替換成 git SHA 或時間戳，
+// 確保每次部署 coi-serviceworker.js 的位元都會改變，瀏覽器才偵測得到新版本並提示使用者更新。
+function swVersionPlugin() {
+  return {
+    name: 'sw-build-version',
+    apply: 'build',
+    closeBundle() {
+      const swPath = path.resolve(process.cwd(), 'dist/coi-serviceworker.js');
+      if (!fs.existsSync(swPath)) return;
+      const sha = (process.env.GITHUB_SHA || '').slice(0, 7);
+      const version = sha || new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
+      const code = fs.readFileSync(swPath, 'utf-8').replace(/__BUILD_VERSION__/g, version);
+      fs.writeFileSync(swPath, code);
+      console.log(`[sw-build-version] 已將 Service Worker 版本標記為 ${version}`);
+    }
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), edgeTtsPlugin()],
+  plugins: [react(), edgeTtsPlugin(), swVersionPlugin()],
   base: './',
   server: {
     headers: {

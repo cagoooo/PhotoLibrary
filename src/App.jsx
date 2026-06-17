@@ -5,6 +5,7 @@ import OnboardingDialog from './components/OnboardingDialog';
 import Footer from './components/Footer';
 import ThemeToggle from './components/ThemeToggle';
 import VideoPlayer from './components/VideoPlayer';
+import UpdateNotification from './components/UpdateNotification';
 
 export default function App() {
   // 核心狀態
@@ -620,6 +621,9 @@ export default function App() {
 
       {/* 頁尾 */}
       <Footer />
+
+      {/* 偵測到新版本時，於右下角提示使用者重新整理 */}
+      <UpdateNotification />
     </div>
   );
 }
