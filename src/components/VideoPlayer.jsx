@@ -302,9 +302,16 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
               throw new Error(`HTTP 錯誤 ${res.status}: ${errBody || "伺服器未提供詳情"}`);
             }
             const blob = await res.blob();
-            const blobUrl = URL.createObjectURL(blob);
             
-            const audioObj = new Audio(blobUrl);
+            // 轉成 Base64 Data URL 以相容 COEP 與 Web Audio API
+            const reader = new FileReader();
+            const dataUrl = await new Promise((resolve, reject) => {
+              reader.onloadend = () => resolve(reader.result);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+            
+            const audioObj = new Audio(dataUrl);
             audioObj.preload = "auto";
             
             // ⏳ 等待音訊元資料 (Metadata) 載入，以取得真實語音時長
@@ -1163,9 +1170,16 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
       const url = getTtsApiUrl(editNarration, ttsVoice, '+20%', Date.now());
       const res = await fetch(url);
       const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
       
-      const audioObj = new Audio(blobUrl);
+      // 轉成 Base64 Data URL 以相容 COEP 與 Web Audio API
+      const reader = new FileReader();
+      const dataUrl = await new Promise((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      
+      const audioObj = new Audio(dataUrl);
       
       // ⏳ 等待音訊元資料 (Metadata) 載入，以取得真實語音時長
       await new Promise((resolve) => {
