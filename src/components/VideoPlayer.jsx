@@ -1363,7 +1363,7 @@ export default function VideoPlayer({ images, script, onUpdateScript }) {
                 <span className="tts-percentage-badge">{ttsLoadProgress}%</span>
               </div>
               <div className="tts-loading-text-group">
-                <h4>AI 語音旁白合成中</h4>
+                <h4>語音旁白合成中</h4>
                 <p>正在生成微軟高品質 Neural 數位人聲旁白...</p>
               </div>
               <div className="tts-progress-track">

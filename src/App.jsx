@@ -153,7 +153,7 @@ export default function App() {
   // 4. 呼叫 Gemini 分析照片並生成影片腳本
   const handleGenerateScript = async () => {
     if (!apiKey) {
-      setError('請先輸入並設定您的 Gemini API Key！');
+      setError('請先輸入並設定您的 API 授權金鑰！');
       return;
     }
     if (images.length === 0) {
@@ -182,7 +182,7 @@ export default function App() {
         <div className="header-content">
           <div className="logo-section">
             <Film className="logo-icon" size={24} />
-            <h1>AI 智慧照片影片產生器</h1>
+            <h1>智慧照片影片產生器</h1>
           </div>
           
           <div className="nav-actions">
@@ -211,7 +211,7 @@ export default function App() {
         <div className="intro-banner">
           <h2>📸 活動成果，一秒變精美大片！</h2>
           <p>
-            只需要上傳您的照片紀錄，Gemini 的多模態 AI 將自動識別照片中發生的故事、編寫流暢中文旁白與字幕，並搭配精彩的 Ken Burns 動效與背景音樂，匯出 professional 的剪輯影片！
+            只需要上傳您的照片紀錄，多模態智慧分析技術將自動識別照片中發生的故事、編寫流暢中文旁白與字幕，並搭配精彩的 Ken Burns 動效與背景音樂，匯出專業的剪輯影片！
           </p>
           <div className="banner-buttons">
             <button className="btn-secondary" onClick={() => setIsOnboardingOpen(true)}>
@@ -237,7 +237,7 @@ export default function App() {
             {/* API Key 設定區 */}
             <div className="api-key-box">
               <div className="api-key-label">
-                <span>Gemini API Key</span>
+                <span>API 授權金鑰 (Gemini API Key)</span>
                 <a 
                   href="https://aistudio.google.com/app/apikey" 
                   target="_blank" 
@@ -252,7 +252,7 @@ export default function App() {
                   type="password" 
                   value={apiKey} 
                   onChange={handleApiKeyChange}
-                  placeholder="輸入 AIzaSy 開頭的 Gemini API Key..."
+                  placeholder="輸入 AIzaSy 開頭的 API 授權金鑰..."
                   className="input-text"
                   disabled={isTestingKey}
                 />
@@ -276,7 +276,7 @@ export default function App() {
               {keyTestStatus === 'success' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#10b981', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: 'bold' }}>
                   <CheckCircle size={16} />
-                  <span>驗證成功！您的 Gemini API Key 有效且可正常使用。</span>
+                  <span>驗證成功！您的 API 授權金鑰有效且可正常使用。</span>
                 </div>
               )}
               {keyTestStatus === 'error' && (
@@ -373,7 +373,7 @@ export default function App() {
               </div>
 
               <div className="scene-input-group">
-                <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>活動詳細描述 (讓 AI 寫出更精準的腳本)</label>
+                <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>活動詳細描述 (讓系統寫出更精準的腳本)</label>
                 <textarea 
                   value={description} 
                   onChange={(e) => setDescription(e.target.value)}
@@ -394,12 +394,12 @@ export default function App() {
               {isLoading ? (
                 <>
                   <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '3px', margin: '0 8px 0 0' }}></div>
-                  Gemini 正在分析照片內容並撰寫影片腳本...
+                  系統正在分析照片內容並撰寫影片腳本...
                 </>
               ) : (
                 <>
                   <Sparkles size={18} />
-                  開始 AI 分析並產生腳本影片
+                  開始分析照片並產生影片
                 </>
               )}
             </button>
@@ -412,9 +412,9 @@ export default function App() {
             {isLoading && (
               <div className="loading-box">
                 <div className="spinner"></div>
-                <h4>🤖 Gemini 正在運用視覺技術識別照片...</h4>
+                <h4>📷 系統正在運用視覺技術識別照片...</h4>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                  我們正在上傳您的照片給 Gemini 2.5 Flash Lite，分析其中的場景、人物動作及故事主線，並為每一幕生成適合的旁白配音與字幕。請耐心等候！
+                  我們正在運用多模態視覺技術分析照片，辨識其中的場景、人物動作及故事主線，並為每一幕生成適合的旁白配音與字幕。請耐心等候！
                 </p>
               </div>
             )}
@@ -424,7 +424,7 @@ export default function App() {
                 <Film size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
                 <h4>等待影片腳本生成</h4>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', maxWidth: '320px', margin: '0.5rem auto 0' }}>
-                  請在上傳完照片並填妥活動主題後，點擊「開始 AI 分析」按鈕，您的影片成果將會在此處生成預覽。
+                  請在上傳完照片並填妥活動主題後，點擊「開始分析照片」按鈕，您的影片成果將會在此處生成預覽。
                 </p>
               </div>
             )}
@@ -434,7 +434,7 @@ export default function App() {
                 {/* 顯示產生的影片標題與副標題 */}
                 <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--primary-light)', borderRadius: '12px', borderLeft: '4px solid var(--primary)' }}>
                   <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--primary-hover)' }}>
-                    ✨ AI 生成影片主題：
+                    ✨ 智慧生成影片主題：
                   </h4>
                   <p style={{ fontWeight: '800', fontSize: '1.25rem', marginTop: '0.2rem' }}>{videoScript.title}</p>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{videoScript.subtitle}</p>

@@ -10,7 +10,7 @@ export default function OnboardingDialog({ isOpen, onClose }) {
       emoji: "🔑",
       title: "配置金鑰",
       color: "var(--pirls-peach)",
-      desc: "在右上方設定您的 Gemini API Key。金鑰只會儲存在您的瀏覽器中，安全有保障！"
+      desc: "在右上方設定您的 API 授權金鑰 (Gemini API Key)。金鑰只會儲存在您的瀏覽器中，安全有保障！"
     },
     {
       num: "2",
@@ -24,14 +24,14 @@ export default function OnboardingDialog({ isOpen, onClose }) {
       emoji: "✍️",
       title: "輸入活動標題",
       color: "var(--pirls-sky)",
-      desc: "提供這次活動的標題與簡短說明（例如：三年級資訊課 micro:bit 體驗），讓 AI 能更準確掌握主題。"
+      desc: "提供這次活動的標題與簡短說明（例如：三年級資訊課 micro:bit 體驗），讓系統能更準確掌握主題。"
     },
     {
       num: "4",
       emoji: "🤖",
-      title: "AI 偵測與分析",
+      title: "智慧偵測與分析",
       color: "var(--pirls-lemon)",
-      desc: "點擊「開始分析」，Gemini 視覺技術會自動偵測照片內容，並為您量身寫好精彩的旁白與字幕。"
+      desc: "點擊「開始分析」，多模態視覺技術會自動偵測照片內容，並為您量身寫好精彩的旁白與字幕。"
     },
     {
       num: "5",
@@ -57,7 +57,7 @@ export default function OnboardingDialog({ isOpen, onClose }) {
 
         <div className="onboarding-body">
           <p className="onboarding-intro">
-            歡迎使用！這款工具能讓您上傳照片，並透過 Gemini 的多模態視覺辨識，自動編寫故事腳本並剪輯成專業的成果影片。
+            歡迎使用！這款工具能讓您上傳照片，並透過多模態視覺辨識技術，自動編寫故事腳本並剪輯成專業的成果影片。
           </p>
 
           <div className="onboarding-steps">
