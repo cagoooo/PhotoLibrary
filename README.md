@@ -2,6 +2,8 @@
 
 🌐 **線上使用：[智慧自動化照片成果轉影片產生器](https://cagoooo.github.io/PhotoLibrary/)**
 
+> 📌 **目前版本：v1.0.0**（版本管理自 2026-09-06 起，依據 `package.json`）
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
