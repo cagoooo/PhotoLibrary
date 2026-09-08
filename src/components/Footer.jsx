@@ -10,7 +10,7 @@ export default function Footer() {
           &copy; {currentYear} Smart Photo Video Generator. All Rights Reserved.
         </p>
         <p className="author-credit">
-          Made with ❤️ by <a href="https://www.smes.tyc.edu.tw/modules/tadnews/page.php?ncsn=11&nsn=16#a5" target="_blank" rel="noopener noreferrer">阿凱老師</a>
+          Made with ❤️ by <a href="https://www.smes.tyc.edu.tw/modules/school/index.php?department_id=2&zone_id=0&page_id=2&content_id=11&type=news&from_op=all_news#a5" target="_blank" rel="noopener noreferrer">阿凱老師</a>
         </p>
       </div>
     </footer>
